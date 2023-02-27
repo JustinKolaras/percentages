@@ -6,11 +6,11 @@ use std::{io, process};
 fn main() {
     println!("Numeric?");
 
-    let verify_parser: Regex = Regex::new(r"\((.*?)+\)/\d").unwrap();
+    let verify_parser: Regex = Regex::new(r"\(((\d+\.?\d*|\+|\-)+)\)/\d+").unwrap();
     let mut numeric;
 
     // Name for clarity.
-    'input: loop {
+    'redo_input: loop {
         // The following line is required to prevent mere appension (which I don't know why occurs).
         numeric = String::new();
         io::stdin().read_line(&mut numeric).unwrap();
@@ -21,7 +21,7 @@ fn main() {
 
         if !verify_parser.is_match(&numeric) {
             println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.");
-            continue 'input;
+            continue 'redo_input;
         }
 
         let captures: Captures = verify_parser.captures(&numeric).unwrap();
@@ -37,7 +37,7 @@ fn main() {
                 "Number of elements does not equal divider.\nNumber elements: {}\nDivider: {}",
                 &num_elements, &divider
             );
-            continue 'input;
+            continue 'redo_input;
         }
 
         let evaluation = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
