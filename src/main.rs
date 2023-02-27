@@ -16,7 +16,7 @@ fn main() {
         numeric = String::new();
         io::stdin().read_line(&mut numeric).unwrap();
 
-        if *(&numeric.to_lowercase().trim()) == "exit" {
+        if numeric.to_lowercase().trim() == "exit" {
             process::exit(0);
         }
 
@@ -29,7 +29,8 @@ fn main() {
         let text: &str = captures.get(1).unwrap().as_str();
 
         let num_elements: usize = text.split(['+', '-']).count();
-        let divider = (&numeric.split('/').collect::<Vec<&str>>()[1].trim())
+        let divider = numeric.split('/').collect::<Vec<&str>>()[1]
+            .trim()
             .parse::<usize>()
             .unwrap();
 
@@ -42,9 +43,8 @@ fn main() {
         }
 
         let evaluation = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
-        let answer = evaluation.to_string();
 
-        println!("Number elements: {}", num_elements);
-        println!("Result: {:.4}%", &answer);
+        println!("Number elements: {}", num_elements.to_string().bold());
+        println!("Result: {:.4}%", evaluation.to_string().bold());
     }
 }
