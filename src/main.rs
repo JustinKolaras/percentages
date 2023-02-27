@@ -1,3 +1,4 @@
+use colored::*;
 use evalexpr::*;
 use regex::Captures;
 use regex::Regex;
@@ -20,7 +21,7 @@ fn main() {
         }
 
         if !verify_parser.is_match(&numeric) {
-            println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.");
+            println!("Invalid equation, try again.\nNote: {}; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.", if numeric.contains(' ') { "no spaces permitted".bold() } else { "no spaces permitted".white() });
             continue 'redo_input;
         }
 
