@@ -5,13 +5,14 @@ use regex::Regex;
 use std::str::FromStr;
 use std::{io, process};
 
+const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\d+)";
+const WHITESPACE_ONLY: &str = r"\A\s*\z";
+
 #[derive(Debug)]
-// For InvalidDigit. Need to figure out how to constitute it.
-#[allow(dead_code)]
 enum TypeMatchError {
     Space,
     InvalidDigit,
-    Other,
+    Form,
 }
 
 #[derive(Debug)]
@@ -28,18 +29,30 @@ impl FromStr for CalcData {
     type Err = ConvertError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // The reason for the last `(.+)` instead of a simple `\d+` is to enforce "smart bolding" for increased UX.
-        // This can be parsed manually and a specific reason can be found as to why the equation provided was invalid.
-        let verify_parser: Regex = Regex::new(r"\(((\d+\.?\d*|\+|\-)+)\)/(.+)").unwrap();
+        let verify_parser: Regex = Regex::new(VERIFY).unwrap();
 
         if !verify_parser.is_match(s) {
             if s.contains(' ') {
                 return Err(ConvertError::NotMatch(TypeMatchError::Space));
             }
-            return Err(ConvertError::NotMatch(TypeMatchError::Other));
+            return Err(ConvertError::NotMatch(TypeMatchError::Form));
         }
 
-        let captures: Captures = verify_parser.captures(s).unwrap();
+        let captures: Captures = verify_parser.captures(s.trim()).unwrap();
+
+        // Has to be done separately.
+        // There is freedom to unwrap here as we've already checked matches.
+        if captures
+            .get(3)
+            .unwrap()
+            .as_str()
+            .trim()
+            .parse::<i32>()
+            .unwrap()
+            < 1
+        {
+            return Err(ConvertError::NotMatch(TypeMatchError::InvalidDigit));
+        }
 
         let add_seq_raw: String = captures.get(1).unwrap().as_str().to_owned();
         let add_seq_elcount: usize = add_seq_raw.split(['+', '-']).count();
@@ -62,7 +75,6 @@ fn main() {
 
     // Name for clarity.
     'redo_input: loop {
-        // The following line is required to prevent mere appension (which I don't know why occurs).
         numeric = String::new();
         io::stdin().read_line(&mut numeric).unwrap();
 
@@ -70,7 +82,7 @@ fn main() {
             process::exit(0);
         }
 
-        if Regex::new(r"\s").unwrap().is_match(&numeric) {
+        if Regex::new(WHITESPACE_ONLY).unwrap().is_match(&numeric) {
             continue 'redo_input;
         }
 
@@ -80,7 +92,7 @@ fn main() {
                 match err {
                     ConvertError::NotMatch(TypeMatchError::Space) => println!("Invalid equation, try again.\nNote: {}; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.", "no spaces permitted".bold() ),
                     ConvertError::NotMatch(TypeMatchError::InvalidDigit) => println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` {}.", "is a positive integer".bold()),
-                    ConvertError::NotMatch(TypeMatchError::Other) => println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer."),
+                    ConvertError::NotMatch(TypeMatchError::Form) => println!("Invalid equation, try again.\nNote: no spaces permitted; {}\nwhere `...` is an addition sequence and `x` is a positive integer.", "must be in the form of (...)/x".bold()),
                 };
                 continue 'redo_input;
             }
