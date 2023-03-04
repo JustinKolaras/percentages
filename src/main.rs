@@ -58,7 +58,7 @@ impl FromStr for CalcData {
 fn main() {
     println!("Numeric?");
 
-    let mut numeric;
+    let mut numeric: String;
 
     // Name for clarity.
     'redo_input: loop {
@@ -70,7 +70,7 @@ fn main() {
             process::exit(0);
         }
 
-        if numeric == "\r\n" {
+        if Regex::new(r"\s").unwrap().is_match(&numeric) {
             continue 'redo_input;
         }
 
