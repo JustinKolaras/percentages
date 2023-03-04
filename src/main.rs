@@ -11,7 +11,7 @@ const WHITESPACE_ONLY: &str = r"\A\s*\z";
 #[derive(Debug)]
 enum TypeMatchError {
     Space,
-    InvalidDigit,
+    Digit,
     Form,
 }
 
@@ -51,7 +51,7 @@ impl FromStr for CalcData {
             .unwrap()
             < 1
         {
-            return Err(ConvertError::NotMatch(TypeMatchError::InvalidDigit));
+            return Err(ConvertError::NotMatch(TypeMatchError::Digit));
         }
 
         let add_seq_raw: String = captures.get(1).unwrap().as_str().to_owned();
@@ -91,7 +91,7 @@ fn main() {
             Err(err) => {
                 match err {
                     ConvertError::NotMatch(TypeMatchError::Space) => println!("Invalid equation, try again.\nNote: {}; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.", "no spaces permitted".bold() ),
-                    ConvertError::NotMatch(TypeMatchError::InvalidDigit) => println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` {}.", "is a positive integer".bold()),
+                    ConvertError::NotMatch(TypeMatchError::Digit) => println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` {}.", "is a positive integer".bold()),
                     ConvertError::NotMatch(TypeMatchError::Form) => println!("Invalid equation, try again.\nNote: no spaces permitted; {}\nwhere `...` is an addition sequence and `x` is a positive integer.", "must be in the form of (...)/x".bold()),
                 };
                 continue 'redo_input;
