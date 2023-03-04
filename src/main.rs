@@ -41,7 +41,7 @@ impl FromStr for CalcData {
         let captures: Captures = verify_parser.captures(s.trim()).unwrap();
 
         // Has to be done separately.
-        // There is freedom to unwrap here as we've already checked matches.
+        // There is freedom to unwrap here as we've already checked if the text matches the RegEx pattern.
         if captures
             .get(3)
             .unwrap()
