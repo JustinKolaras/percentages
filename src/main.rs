@@ -86,7 +86,7 @@ fn main() {
             continue 'redo_input;
         }
 
-        let parsed = match CalcData::from_str(&numeric) {
+        let parsed: CalcData = match CalcData::from_str(&numeric) {
             Ok(v) => v,
             Err(err) => {
                 match err {
@@ -106,7 +106,7 @@ fn main() {
             continue 'redo_input;
         }
 
-        let evaluation = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
+        let evaluation: Value = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
 
         println!(
             "Number elements: {}",
