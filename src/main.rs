@@ -1,117 +1,44 @@
-use colored::*;
-use evalexpr::*;
-use regex::Captures;
-use regex::Regex;
-use std::str::FromStr;
-use std::{io, process};
+#[macro_use]
+extern crate rocket;
 
-const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\d+)";
-const WHITESPACE_ONLY: &str = r"\A\s*\z";
+use rocket::form::Form;
+use rocket::fs::NamedFile;
+use rocket::request::Request;
 
-#[derive(Debug)]
-enum TypeMatchError {
-    Space,
-    Digit,
-    Form,
+use percentages::{run, CalcResult};
+
+#[derive(FromForm)]
+struct Equation {
+    equation: String,
 }
 
-#[derive(Debug)]
-enum ConvertError {
-    NotMatch(TypeMatchError),
+#[get("/")]
+async fn index() -> Option<NamedFile> {
+    NamedFile::open("static/index.html").await.ok()
 }
 
-struct CalcData {
-    add_seq_elcount: usize,
-    divider: u32,
-}
+#[post("/submit", data = "<eq>")]
+async fn submit(eq: Form<Equation>) -> String {
+    let eq: Equation = eq.into_inner();
+    let eq: String = eq.equation;
+    let eq: &str = eq.trim();
 
-impl FromStr for CalcData {
-    type Err = ConvertError;
+    let result: Result<CalcResult, String> = run(eq.to_string());
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let verify_parser: Regex = Regex::new(VERIFY).unwrap();
-
-        if !verify_parser.is_match(s) {
-            if s.contains(' ') {
-                return Err(ConvertError::NotMatch(TypeMatchError::Space));
-            }
-            return Err(ConvertError::NotMatch(TypeMatchError::Form));
-        }
-
-        let captures: Captures = verify_parser.captures(s.trim()).unwrap();
-
-        // Has to be done separately.
-        // There is freedom to unwrap here as we've already checked if the text matches the RegEx pattern.
-        if captures
-            .get(3)
-            .unwrap()
-            .as_str()
-            .trim()
-            .parse::<i32>()
-            .unwrap()
-            < 1
-        {
-            return Err(ConvertError::NotMatch(TypeMatchError::Digit));
-        }
-
-        let add_seq_raw: String = captures.get(1).unwrap().as_str().to_owned();
-        let add_seq_elcount: usize = add_seq_raw.split(['+', '-']).count();
-        let divider: u32 = s.split('/').collect::<Vec<&str>>()[1]
-            .trim()
-            .parse::<u32>()
-            .unwrap();
-
-        Ok(CalcData {
-            add_seq_elcount,
-            divider,
-        })
+    match result {
+        Ok(result) => format!("Elements: {}\nResult: {}", result.elements, result.result),
+        Err(err) => err.to_string(),
     }
 }
 
-fn main() {
-    println!("Numeric?");
+#[catch(404)]
+fn not_found(req: &Request<'_>) -> String {
+    format!("Sorry, '{}' is not a valid path.", req.uri())
+}
 
-    let mut numeric: String;
-
-    // Name for clarity.
-    'redo_input: loop {
-        numeric = String::new();
-        io::stdin().read_line(&mut numeric).unwrap();
-
-        if numeric.to_lowercase().trim() == "exit" {
-            process::exit(0);
-        }
-
-        if Regex::new(WHITESPACE_ONLY).unwrap().is_match(&numeric) {
-            continue 'redo_input;
-        }
-
-        let parsed: CalcData = match CalcData::from_str(&numeric) {
-            Ok(v) => v,
-            Err(err) => {
-                match err {
-                    ConvertError::NotMatch(TypeMatchError::Space) => println!("Invalid equation, try again.\nNote: {}; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.", "no spaces permitted".bold() ),
-                    ConvertError::NotMatch(TypeMatchError::Digit) => println!("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` {}.", "is a positive integer".bold()),
-                    ConvertError::NotMatch(TypeMatchError::Form) => println!("Invalid equation, try again.\nNote: no spaces permitted; {}\nwhere `...` is an addition sequence and `x` is a positive integer.", "must be in the form of (...)/x".bold()),
-                };
-                continue 'redo_input;
-            }
-        };
-
-        if parsed.add_seq_elcount != (parsed.divider as usize) {
-            println!(
-                "Number of elements does not equal divider.\nNumber elements: {}\nDivider: {}",
-                &parsed.add_seq_elcount, &parsed.divider
-            );
-            continue 'redo_input;
-        }
-
-        let evaluation: Value = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
-
-        println!(
-            "Number elements: {}",
-            parsed.add_seq_elcount.to_string().bold()
-        );
-        println!("Result: {:.4}%", evaluation.to_string().bold());
-    }
+#[launch]
+fn rocket() -> _ {
+    rocket::build()
+        .mount("/", routes![index, submit])
+        .register("/", catchers![not_found])
 }
