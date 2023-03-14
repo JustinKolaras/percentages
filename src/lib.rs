@@ -94,10 +94,14 @@ pub fn run(numeric: String) -> Result<CalcResult, String> {
         ));
     }
 
-    let evaluation: Value = eval(format!("({}) * 100", &numeric).as_str()).unwrap();
+    let evaluation: f64 = eval(format!("({}) * 100", &numeric).as_str())
+        .unwrap()
+        .as_float()
+        .unwrap()
+        .round();
 
     Ok(CalcResult {
         elements: parsed.add_seq_elcount.to_string(),
-        result: format!("{:.4}%", evaluation),
+        result: evaluation.to_string(),
     })
 }

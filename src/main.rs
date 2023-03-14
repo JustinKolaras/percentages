@@ -27,13 +27,13 @@ async fn submit(eq: Form<Equation>) -> String {
 
     match result {
         Ok(result) => format!("Elements: {}\nResult: {}", result.elements, result.result),
-        Err(err) => err.to_string(),
+        Err(err) => err,
     }
 }
 
 #[catch(404)]
 fn not_found(req: &Request<'_>) -> String {
-    format!("Sorry, '{}' is not a valid path.", req.uri())
+    format!("Sorry, `{}` is not a valid path.", req.uri())
 }
 
 #[launch]
