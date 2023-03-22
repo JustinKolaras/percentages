@@ -294,10 +294,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "evalexpr"
-version = "8.1.0"
+name = "eval"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacfb566035f8cd02f6ec9247c242f3f9904a0b288ea383abcf4e95df6436a34"
+checksum = "ba90c19bed0c67afb0a24340b42d13ddddcb5413c4c17a04c11871bd6b572c42"
+dependencies = [
+ "quick-error",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "fastrand"
@@ -999,7 +1004,7 @@ checksum = "478c572c3d73181ff3c2539045f6eb99e5491218eae919370993b890cdbdd98e"
 name = "percentages"
 version = "0.1.0"
 dependencies = [
- "evalexpr",
+ "eval",
  "regex",
  "rocket",
  "rocket_dyn_templates",
@@ -1100,6 +1105,12 @@ dependencies = [
  "version_check",
  "yansi",
 ]
+
+[[package]]
+name = "quick-error"
+version = "1.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
 
 [[package]]
 name = "quote"

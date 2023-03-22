@@ -34,17 +34,22 @@ async fn results(eq: Form<Equation>) -> Template {
     let eq: String = eq.equation;
     let eq: &str = eq.trim();
 
-    let results: String = match run(eq.to_string()) {
-        Ok(result) => format!("Elements: {}\nResult: {}%", result.elements, result.result),
-        Err(err) => format!("Computation error.\n\n{}", err),
-    };
-
-    Template::render(
-        "results",
-        context! {
-            results,
-        },
-    )
+    match run(eq.to_string()) {
+        Ok(result) => Template::render(
+            "success",
+            context! {
+                elements: result.elements,
+                percentage: result.percentage
+            },
+        ),
+        Err(err) => Template::render(
+            "error",
+            context! {
+                error: err.error,
+                emphasis: err.emphasis
+            },
+        ),
+    }
 }
 
 /// Catchers.

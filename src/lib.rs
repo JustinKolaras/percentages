@@ -1,4 +1,4 @@
-use evalexpr::*;
+use eval::eval;
 use regex::Captures;
 use regex::Regex;
 use std::str::FromStr;
@@ -25,7 +25,12 @@ struct CalcData {
 
 pub struct CalcResult {
     pub elements: String,
-    pub result: String,
+    pub percentage: String,
+}
+
+pub struct ErrResult {
+    pub error: String,
+    pub emphasis: Option<String>,
 }
 
 impl FromStr for CalcData {
@@ -33,6 +38,11 @@ impl FromStr for CalcData {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let verify_parser: Regex = Regex::new(VERIFY).unwrap();
+        let whitespace_parser: Regex = Regex::new(WHITESPACE_ONLY).unwrap();
+
+        if whitespace_parser.is_match(s) {
+            return Err(ConvertError::NotMatch(TypeMatchError::Form));
+        }
 
         if !verify_parser.is_match(s) {
             if s.contains(' ') {
@@ -43,7 +53,7 @@ impl FromStr for CalcData {
 
         let captures: Captures = verify_parser.captures(s.trim()).unwrap();
 
-        // Has to be done separately.
+        // Has to be done separately from the "catch all" if statement on line 42.
         // There is freedom to unwrap here as we've already checked if the text matches the RegEx pattern.
         if captures
             .get(3)
@@ -71,37 +81,48 @@ impl FromStr for CalcData {
     }
 }
 
-pub fn run(numeric: String) -> Result<CalcResult, String> {
-    if Regex::new(WHITESPACE_ONLY).unwrap().is_match(&numeric) {
-        return Err("Invalid equation, try again.\nNote: no spaces permitted; **must be in the form of (...)/x**\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string());
-    }
-
+pub fn run(numeric: String) -> Result<CalcResult, ErrResult> {
     let parsed: CalcData = match CalcData::from_str(&numeric) {
         Ok(v) => v,
         Err(err) => {
             match err {
-                ConvertError::NotMatch(TypeMatchError::Space) => return Err("Invalid equation, try again.\nNote: **no spaces permitted**; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string()),
-                ConvertError::NotMatch(TypeMatchError::Digit) => return Err("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a **positive integer**.".to_string()),
-                ConvertError::NotMatch(TypeMatchError::Form) => return Err("Invalid equation, try again.\nNote: no spaces permitted; **must be in the form of (...)/x**\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string()),
+                ConvertError::NotMatch(TypeMatchError::Space) => return Err(
+                    ErrResult {
+                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
+                        emphasis: Some("no spaces permitted".to_string()), 
+                    }),
+                ConvertError::NotMatch(TypeMatchError::Digit) => return Err(
+                    ErrResult {
+                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
+                        emphasis: Some("is a positive integer".to_string()),
+                    }),
+                ConvertError::NotMatch(TypeMatchError::Form) => return Err(
+                    ErrResult {
+                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
+                        emphasis: Some("must be in the form of (...)/x".to_string()),
+                    }),
             };
         }
     };
 
     if parsed.add_seq_elcount != (parsed.divider as usize) {
-        return Err(format!(
-            "Number of elements does not equal divider.\nNumber elements: {}\nDivider: {}",
-            &parsed.add_seq_elcount, &parsed.divider
-        ));
+        return Err(ErrResult {
+            error: format!(
+                "Number of elements does not equal divider. Number elements: {} Divider: {}",
+                &parsed.add_seq_elcount, &parsed.divider
+            ),
+            emphasis: None,
+        });
     }
 
     let evaluation: f64 = eval(format!("({}) * 100", &numeric).as_str())
         .unwrap()
-        .as_float()
+        .as_f64()
         .unwrap()
         .round();
 
     Ok(CalcResult {
         elements: parsed.add_seq_elcount.to_string(),
-        result: evaluation.to_string(),
+        percentage: evaluation.to_string(),
     })
 }
