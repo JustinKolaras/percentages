@@ -7,48 +7,48 @@ const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\d+)";
 const WHITESPACE_ONLY: &str = r"\A\s*\z";
 
 #[derive(Debug)]
-enum TypeMatchError {
+enum TypeConversionError {
     Space,
     Digit,
     Form,
 }
 
 #[derive(Debug)]
-enum ConvertError {
-    NotMatch(TypeMatchError),
+enum DataParseError {
+    NotMatch(TypeConversionError),
 }
 
-struct CalcData {
-    add_seq_elcount: usize,
-    divider: u32,
+struct CalculationData {
+    elements: u64,
+    divider: u64,
 }
 
-pub struct CalcResult {
-    pub elements: String,
-    pub percentage: String,
+pub struct SuccessData {
+    pub elements: u64,
+    pub percentage: f64,
 }
 
-pub struct ErrResult {
+pub struct ErrorData<'a> {
     pub error: String,
-    pub emphasis: Option<String>,
+    pub emphasis: Option<&'a str>,
 }
 
-impl FromStr for CalcData {
-    type Err = ConvertError;
+impl FromStr for CalculationData {
+    type Err = DataParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let verify_parser: Regex = Regex::new(VERIFY).unwrap();
         let whitespace_parser: Regex = Regex::new(WHITESPACE_ONLY).unwrap();
 
         if whitespace_parser.is_match(s) {
-            return Err(ConvertError::NotMatch(TypeMatchError::Form));
+            return Err(DataParseError::NotMatch(TypeConversionError::Form));
         }
 
         if !verify_parser.is_match(s) {
             if s.contains(' ') {
-                return Err(ConvertError::NotMatch(TypeMatchError::Space));
+                return Err(DataParseError::NotMatch(TypeConversionError::Space));
             }
-            return Err(ConvertError::NotMatch(TypeMatchError::Form));
+            return Err(DataParseError::NotMatch(TypeConversionError::Form));
         }
 
         let captures: Captures = verify_parser.captures(s.trim()).unwrap();
@@ -64,65 +64,58 @@ impl FromStr for CalcData {
             .unwrap()
             < 1
         {
-            return Err(ConvertError::NotMatch(TypeMatchError::Digit));
+            return Err(DataParseError::NotMatch(TypeConversionError::Digit));
         }
 
-        let add_seq_raw: String = captures.get(1).unwrap().as_str().to_owned();
-        let add_seq_elcount: usize = add_seq_raw.split(['+', '-']).count();
-        let divider: u32 = s.split('/').collect::<Vec<&str>>()[1]
+        let raw: String = captures.get(1).unwrap().as_str().to_owned();
+        let elements: u64 = raw.split(['+', '-']).count() as u64;
+        let divider: u64 = s.split('/').collect::<Vec<&str>>()[1]
             .trim()
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap();
 
-        Ok(CalcData {
-            add_seq_elcount,
-            divider,
-        })
+        Ok(CalculationData { elements, divider })
     }
 }
 
-pub fn run(numeric: String) -> Result<CalcResult, ErrResult> {
-    let parsed: CalcData = match CalcData::from_str(&numeric) {
+pub fn run(numeric: String) -> Result<SuccessData, ErrorData<'static>> {
+    let error_message: String = String::from("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.");
+
+    let parsed: CalculationData = match CalculationData::from_str(&numeric) {
         Ok(v) => v,
         Err(err) => {
-            match err {
-                ConvertError::NotMatch(TypeMatchError::Space) => return Err(
-                    ErrResult {
-                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
-                        emphasis: Some("no spaces permitted".to_string()), 
-                    }),
-                ConvertError::NotMatch(TypeMatchError::Digit) => return Err(
-                    ErrResult {
-                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
-                        emphasis: Some("is a positive integer".to_string()),
-                    }),
-                ConvertError::NotMatch(TypeMatchError::Form) => return Err(
-                    ErrResult {
-                        error: "Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.".to_string(), 
-                        emphasis: Some("must be in the form of (...)/x".to_string()),
-                    }),
-            };
+            return Err(ErrorData {
+                error: error_message,
+                emphasis: match err {
+                    DataParseError::NotMatch(TypeConversionError::Space) => {
+                        Some("no spaces permitted")
+                    }
+                    DataParseError::NotMatch(TypeConversionError::Digit) => {
+                        Some("is a positive integer")
+                    }
+                    DataParseError::NotMatch(TypeConversionError::Form) => {
+                        Some("must be in the form of (...)/x")
+                    }
+                },
+            })
         }
     };
 
-    if parsed.add_seq_elcount != (parsed.divider as usize) {
-        return Err(ErrResult {
+    if parsed.elements != parsed.divider {
+        return Err(ErrorData {
             error: format!(
                 "Number of elements does not equal divider. Number elements: {} Divider: {}",
-                &parsed.add_seq_elcount, &parsed.divider
+                parsed.elements, parsed.divider
             ),
             emphasis: None,
         });
     }
 
-    let evaluation: f64 = eval(format!("({}) * 100", &numeric).as_str())
-        .unwrap()
-        .as_f64()
-        .unwrap()
-        .round();
+    let expr: String = format!("({}) * 100", &numeric);
+    let evaluation: f64 = eval(expr.as_str()).unwrap().as_f64().unwrap().round();
 
-    Ok(CalcResult {
-        elements: parsed.add_seq_elcount.to_string(),
-        percentage: evaluation.to_string(),
+    Ok(SuccessData {
+        elements: parsed.elements,
+        percentage: evaluation,
     })
 }
