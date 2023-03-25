@@ -6,14 +6,12 @@ use std::str::FromStr;
 const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\d+)";
 const WHITESPACE_ONLY: &str = r"\A\s*\z";
 
-#[derive(Debug)]
 enum TypeConversionError {
     Space,
     Digit,
     Form,
 }
 
-#[derive(Debug)]
 enum DataParseError {
     NotMatch(TypeConversionError),
 }
