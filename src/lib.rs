@@ -3,7 +3,7 @@ use regex::Captures;
 use regex::Regex;
 use std::str::FromStr;
 
-const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\d+)";
+const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)";
 const WHITESPACE_ONLY: &str = r"\A\s*\z";
 
 enum TypeConversionError {
@@ -53,6 +53,7 @@ impl FromStr for CalculationData {
 
         // Has to be done separately from the "catch all" if statement on line 42.
         // There is freedom to unwrap here as we've already checked if the text matches the RegEx pattern.
+        println!("{}", captures.get(3).unwrap().as_str().trim());
         if captures
             .get(3)
             .unwrap()
