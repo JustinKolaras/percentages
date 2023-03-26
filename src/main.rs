@@ -27,13 +27,13 @@ async fn style() -> Option<NamedFile> {
 
 /// POST.
 
-#[post("/results", data = "<eq>")]
-async fn results(eq: Form<Equation>) -> Template {
-    let eq: Equation = eq.into_inner();
-    let eq: String = eq.equation;
-    let eq: &str = eq.trim();
+#[post("/results", data = "<equation>")]
+async fn results(equation: Form<Equation>) -> Template {
+    let equation: Equation = equation.into_inner();
+    let equation: String = equation.equation;
+    let equation: &str = equation.trim();
 
-    match run(eq.to_string()) {
+    match run(equation.to_string()) {
         Ok(result) => Template::render(
             "success",
             context! {
@@ -41,11 +41,11 @@ async fn results(eq: Form<Equation>) -> Template {
                 percentage: result.percentage
             },
         ),
-        Err(err) => Template::render(
+        Err(error) => Template::render(
             "error",
             context! {
-                error: err.error,
-                emphasis: err.emphasis
+                error: error.error,
+                emphasis: error.emphasis
             },
         ),
     }

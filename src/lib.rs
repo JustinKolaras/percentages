@@ -34,26 +34,25 @@ pub struct ErrorData<'a> {
 impl FromStr for CalculationData {
     type Err = DataParseError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(previous: &str) -> Result<Self, Self::Err> {
         let verify_parser: Regex = Regex::new(VERIFY).unwrap();
         let whitespace_parser: Regex = Regex::new(WHITESPACE_ONLY).unwrap();
 
-        if whitespace_parser.is_match(s) {
+        if whitespace_parser.is_match(previous) {
             return Err(DataParseError::NotMatch(TypeConversionError::Form));
         }
 
-        if !verify_parser.is_match(s) {
-            if s.contains(' ') {
+        if !verify_parser.is_match(previous) {
+            if previous.contains(' ') {
                 return Err(DataParseError::NotMatch(TypeConversionError::Space));
             }
             return Err(DataParseError::NotMatch(TypeConversionError::Form));
         }
 
-        let captures: Captures = verify_parser.captures(s.trim()).unwrap();
+        let captures: Captures = verify_parser.captures(previous.trim()).unwrap();
 
         // Has to be done separately from the "catch all" if statement on line 42.
         // There is freedom to unwrap here as we've already checked if the text matches the RegEx pattern.
-        println!("{}", captures.get(3).unwrap().as_str().trim());
         if captures
             .get(3)
             .unwrap()
@@ -68,7 +67,7 @@ impl FromStr for CalculationData {
 
         let raw: String = captures.get(1).unwrap().as_str().to_owned();
         let elements: u64 = raw.split(['+', '-']).count() as u64;
-        let divider: u64 = s.split('/').collect::<Vec<&str>>()[1]
+        let divider: u64 = previous.split('/').collect::<Vec<&str>>()[1]
             .trim()
             .parse::<u64>()
             .unwrap();
@@ -77,15 +76,15 @@ impl FromStr for CalculationData {
     }
 }
 
-pub fn run(numeric: String) -> Result<SuccessData, ErrorData<'static>> {
+pub fn run(input: String) -> Result<SuccessData, ErrorData<'static>> {
     let error_message: String = String::from("Invalid equation, try again.\nNote: no spaces permitted; must be in the form of (...)/x\nwhere `...` is an addition sequence and `x` is a positive integer.");
 
-    let parsed: CalculationData = match CalculationData::from_str(&numeric) {
-        Ok(v) => v,
-        Err(err) => {
+    let parsed: CalculationData = match CalculationData::from_str(&input) {
+        Ok(result) => result,
+        Err(error) => {
             return Err(ErrorData {
                 error: error_message,
-                emphasis: match err {
+                emphasis: match error {
                     DataParseError::NotMatch(TypeConversionError::Space) => {
                         Some("no spaces permitted")
                     }
@@ -110,8 +109,8 @@ pub fn run(numeric: String) -> Result<SuccessData, ErrorData<'static>> {
         });
     }
 
-    let expr: String = format!("({}) * 100", &numeric);
-    let evaluation: f64 = eval(expr.as_str()).unwrap().as_f64().unwrap().round();
+    let expression: String = format!("({}) * 100", &input);
+    let evaluation: f64 = eval(expression.as_str()).unwrap().as_f64().unwrap().round();
 
     Ok(SuccessData {
         elements: parsed.elements,
