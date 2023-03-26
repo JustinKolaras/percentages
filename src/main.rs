@@ -3,7 +3,6 @@ extern crate rocket;
 
 use rocket::form::Form;
 use rocket::fs::NamedFile;
-use rocket::request::Request;
 use rocket_dyn_templates::{context, Template};
 
 use percentages::run;
@@ -17,7 +16,7 @@ struct Equation {
 
 #[get("/")]
 async fn home() -> Option<NamedFile> {
-    NamedFile::open("static/index.html").await.ok()
+    NamedFile::open("static/home.html").await.ok()
 }
 
 // Manually add a route to return the CSS file.
@@ -55,8 +54,13 @@ async fn results(eq: Form<Equation>) -> Template {
 /// Catchers.
 
 #[catch(404)]
-fn not_found(req: &Request<'_>) -> String {
-    format!("Sorry, `{}` is not a valid path.", req.uri())
+async fn not_found() -> Option<NamedFile> {
+    NamedFile::open("static/catchers/404.html").await.ok()
+}
+
+#[catch(500)]
+async fn internal_error() -> Option<NamedFile> {
+    NamedFile::open("static/catchers/500.html").await.ok()
 }
 
 /// Launch.
@@ -64,7 +68,7 @@ fn not_found(req: &Request<'_>) -> String {
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .register("/", catchers![not_found])
+        .register("/", catchers![not_found, internal_error])
         .mount("/", routes![home, results, style])
         .attach(Template::fairing())
 }
