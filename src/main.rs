@@ -22,12 +22,12 @@ async fn home() -> Option<NamedFile> {
 // Manually added routes.
 #[get("/style.css")]
 async fn style() -> Option<NamedFile> {
-    NamedFile::open("static/style.css").await.ok()
+    NamedFile::open("styles/style.css").await.ok()
 }
 
 #[get("/homeLogic.js")]
 async fn home_logic() -> Option<NamedFile> {
-    NamedFile::open("static/homeLogic.js").await.ok()
+    NamedFile::open("scripts/homeLogic.js").await.ok()
 }
 
 /// POST.
