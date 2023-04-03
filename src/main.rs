@@ -19,10 +19,15 @@ async fn home() -> Option<NamedFile> {
     NamedFile::open("static/home.html").await.ok()
 }
 
-// Manually add a route to return the CSS file.
+// Manually added routes.
 #[get("/style.css")]
 async fn style() -> Option<NamedFile> {
     NamedFile::open("static/style.css").await.ok()
+}
+
+#[get("/homeLogic.js")]
+async fn home_logic() -> Option<NamedFile> {
+    NamedFile::open("static/homeLogic.js").await.ok()
 }
 
 /// POST.
@@ -69,6 +74,6 @@ async fn internal_error() -> Option<NamedFile> {
 fn rocket() -> _ {
     rocket::build()
         .register("/", catchers![not_found, internal_error])
-        .mount("/", routes![home, results, style])
+        .mount("/", routes![home, results, style, home_logic])
         .attach(Template::fairing())
 }

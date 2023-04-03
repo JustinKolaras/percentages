@@ -7,7 +7,30 @@ body {
     padding: 0;
 }
 
-#input {
+/* CLASSES */
+
+.btn {
+    border-radius: 15px;
+    border: 5px;
+    background-color: rgb(18, 18, 18);
+    background-color: rgb(139, 139, 139);
+    color: white;
+    font-size: 12px;
+    width: 100px;
+    height: 35px;
+}
+
+.primary_btn {
+    height: 40px;
+    width: 200px;
+    background-color: #4681f4;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* IDs */
+
+#equation_input {
     border-radius: 15px;
     border: 5px;
     border-color: white;
@@ -17,23 +40,17 @@ body {
     font-size: 15px;
     text-indent: 10px;
     font-weight: bold;
-    margin: 0;
+    margin-bottom: 7.5px;
     margin-left: 5px;
-    padding: 0;
     width: 300px;
     height: 25px;
 }
 
-#btn {
-    border-radius: 15px;
-    border: 5px;
-    background-color: rgb(18, 18, 18);
-    background-color: rgb(139, 139, 139);
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    margin: 0;
-    padding: 0;
-    width: 100px;
-    height: 35px;
+#new_btn {
+    display: block;
+    margin-bottom: 20px;
+}
+
+#input_segment {
+    margin-bottom: 10px;
 }
