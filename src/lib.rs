@@ -3,8 +3,8 @@ use regex::Captures;
 use regex::Regex;
 use std::str::FromStr;
 
-const VERIFY: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)";
-const WHITESPACE_ONLY: &str = r"\A\s*\z";
+const VERIFY_REGEX: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)";
+const WHITESPACE_ONLY_REGEX: &str = r"\A\s*\z";
 
 enum TypeConversionError {
     Space,
@@ -35,8 +35,8 @@ impl FromStr for CalculationData {
     type Err = DataParseError;
 
     fn from_str(previous: &str) -> Result<Self, Self::Err> {
-        let verify_parser: Regex = Regex::new(VERIFY).unwrap();
-        let whitespace_parser: Regex = Regex::new(WHITESPACE_ONLY).unwrap();
+        let verify_parser: Regex = Regex::new(VERIFY_REGEX).unwrap();
+        let whitespace_parser: Regex = Regex::new(WHITESPACE_ONLY_REGEX).unwrap();
 
         if whitespace_parser.is_match(previous) {
             return Err(DataParseError::NotMatch(TypeConversionError::Form));
