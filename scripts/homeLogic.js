@@ -6,6 +6,11 @@ function onNewButtonClick() {
     const segmentNode = document.getElementById("input_segment");
 
     const clone = segmentNode.cloneNode(true);
+
+    // Reset the text of the clone.
+    const equationInput = clone.getElementsByTagName("input").equation_input;
+    equationInput.value = "";
+
     inputForm.insertBefore(clone, newButton);
 }
 
