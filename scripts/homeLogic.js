@@ -7,7 +7,7 @@ function onNewButtonClick() {
 
     const clone = segmentNode.cloneNode(true);
 
-    // Reset the text of the clone.
+    // Reset the text of the clone and increment their name.
     const equationInput = clone.getElementsByTagName("input").equation_input;
     equationInput.value = "";
 

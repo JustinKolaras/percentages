@@ -4,8 +4,10 @@
     </head>
     <body>
         <h1>Success</h1>
-        <p>Elements: <b>{{elements}}</b></p>
-        <p>Percentage: <b>{{percentage}}</b>%</p>
+        {{#each elements}}
+            <p>Elements: <b>{{this}}</b></p>
+            <!-- <p>Percentage: <b>{{percentage.0}}</b>%</p> -->
+        {{/each}}
         <form action="/" method="get">
             <input type="submit" class="btn primary_btn" value="Back" />
         </form>

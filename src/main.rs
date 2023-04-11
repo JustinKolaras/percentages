@@ -9,7 +9,7 @@ use percentages::run;
 
 #[derive(FromForm)]
 struct Equation {
-    equation: String,
+    equations: Vec<String>,
 }
 
 /// GET.
@@ -32,28 +32,39 @@ async fn home_logic() -> Option<NamedFile> {
 
 /// POST.
 
-#[post("/results", data = "<equation>")]
-async fn results(equation: Form<Equation>) -> Template {
-    let equation: Equation = equation.into_inner();
-    let equation: String = equation.equation;
-    let equation: &str = equation.trim();
+#[post("/results", data = "<equations>")]
+async fn results(equations: Form<Equation>) -> Template {
+    let equations: Equation = equations.into_inner();
+    let equations: Vec<String> = equations.equations;
 
-    match run(equation.to_string()) {
-        Ok(result) => Template::render(
-            "success",
-            context! {
-                elements: result.elements,
-                percentage: result.percentage
-            },
-        ),
-        Err(error) => Template::render(
-            "error",
-            context! {
-                error: error.error,
-                emphasis: error.emphasis
-            },
-        ),
+    let mut to_send_elements: Vec<u64> = Vec::new();
+    let mut to_send_percentages: Vec<f64> = Vec::new();
+
+    for equation in equations {
+        match run(equation) {
+            Ok(result) => {
+                to_send_elements.push(result.elements);
+                to_send_percentages.push(result.percentage);
+            }
+            Err(error) => {
+                return Template::render(
+                    "error",
+                    context! {
+                        error: error.error,
+                        emphasis: error.emphasis
+                    },
+                )
+            }
+        }
     }
+
+    Template::render(
+        "success",
+        context! {
+            elements: to_send_elements,
+            percentage: to_send_percentages
+        },
+    )
 }
 
 /// Catchers.
