@@ -22,7 +22,6 @@ struct CalculationData {
 }
 
 pub struct SuccessData {
-    pub elements: u64,
     pub percentage: f64,
 }
 
@@ -113,7 +112,6 @@ pub fn run(input: String) -> Result<SuccessData, ErrorData<'static>> {
     let evaluation: f64 = eval(expression.as_str()).unwrap().as_f64().unwrap().round();
 
     Ok(SuccessData {
-        elements: parsed.elements,
         percentage: evaluation,
     })
 }

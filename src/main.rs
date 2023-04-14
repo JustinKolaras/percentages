@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate rocket;
 
+use std::collections::HashMap;
+
 use rocket::form::Form;
 use rocket::fs::NamedFile;
 use rocket_dyn_templates::{context, Template};
@@ -25,9 +27,9 @@ async fn style() -> Option<NamedFile> {
     NamedFile::open("styles/style.css").await.ok()
 }
 
-#[get("/homeLogic.js")]
-async fn home_logic() -> Option<NamedFile> {
-    NamedFile::open("scripts/homeLogic.js").await.ok()
+#[get("/logic.js")]
+async fn logic() -> Option<NamedFile> {
+    NamedFile::open("scripts/logic.js").await.ok()
 }
 
 /// POST.
@@ -37,21 +39,24 @@ async fn results(equations: Form<Equation>) -> Template {
     let equations: Equation = equations.into_inner();
     let equations: Vec<String> = equations.equations;
 
-    let mut to_send_elements: Vec<u64> = Vec::new();
-    let mut to_send_percentages: Vec<f64> = Vec::new();
+    // Impromptu solution to HBS issues by using @key & not @index.
+    // Might find another solution later.
+    let mut percentages_map: HashMap<String, f64> = HashMap::new();
+    let mut percentages_index: u8 = 0;
 
     for equation in equations {
         match run(equation) {
             Ok(result) => {
-                to_send_elements.push(result.elements);
-                to_send_percentages.push(result.percentage);
+                percentages_index += 1;
+                // percentages_index must be a String to serialize.
+                percentages_map.insert(percentages_index.to_string(), result.percentage);
             }
             Err(error) => {
                 return Template::render(
                     "error",
                     context! {
                         error: error.error,
-                        emphasis: error.emphasis
+                        emphasis: error.emphasis,
                     },
                 )
             }
@@ -61,8 +66,7 @@ async fn results(equations: Form<Equation>) -> Template {
     Template::render(
         "success",
         context! {
-            elements: to_send_elements,
-            percentage: to_send_percentages
+            percentage: percentages_map,
         },
     )
 }
@@ -85,6 +89,6 @@ async fn internal_error() -> Option<NamedFile> {
 fn rocket() -> _ {
     rocket::build()
         .register("/", catchers![not_found, internal_error])
-        .mount("/", routes![home, results, style, home_logic])
+        .mount("/", routes![home, results, style, logic])
         .attach(Template::fairing())
 }

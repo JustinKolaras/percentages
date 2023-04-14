@@ -4,9 +4,9 @@
     </head>
     <body>
         <h1>Success</h1>
-        {{#each elements}}
-            <p>Elements: <b>{{this}}</b></p>
-            <!-- <p>Percentage: <b>{{percentage.0}}</b>%</p> -->
+        {{#each percentage}}
+            <h3>Equation {{@key}}</h3>
+            <p>Percentage: <b>{{this}}</b>%</p>
         {{/each}}
         <form action="/" method="get">
             <input type="submit" class="btn primary_btn" value="Back" />

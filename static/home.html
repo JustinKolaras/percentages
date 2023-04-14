@@ -3,13 +3,13 @@
     <head>
         <title>Percentages Calculator</title>
         <link rel="stylesheet" href="style.css" />
-        <script src="homeLogic.js" defer></script>
+        <script src="logic.js" defer></script>
     </head>
     <body>
         <h1>Percentages Calculator</h1>
         <form action="/results" method="post" id="input_form" autocomplete="off" spellcheck="false">
             <div id="input_segment">
-                <label for="equation_input">Input equation:</label>
+                <label for="equation_input" id="equation_label">Input equation #1:</label>
                 <input type="text" id="equation_input" name="equations[]" />
             </div>
             <input type="button" id="new_btn" class="btn" value="New" />
