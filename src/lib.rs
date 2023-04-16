@@ -3,7 +3,7 @@ use regex::Captures;
 use regex::Regex;
 use std::str::FromStr;
 
-const VERIFY_REGEX: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)";
+const VERIFY_REGEX: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)$";
 const WHITESPACE_ONLY_REGEX: &str = r"\A\s*\z";
 
 enum TypeConversionError {

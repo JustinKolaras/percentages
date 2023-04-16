@@ -28,6 +28,14 @@ body {
     font-weight: bold;
 }
 
+.primary_text_segment {
+    color: #61d9e1;
+}
+
+.error_text_segment {
+    color: #f76db7;
+}
+
 /* IDs */
 
 #equation_input {

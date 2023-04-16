@@ -4,7 +4,10 @@
     </head>
     <body>
         <h1>Error</h1>
-        <p>{{error}}<br /><br /><span style="font-size:17px"><b>{{emphasis}}</b></span></p>
+        {{#each error}}
+            <h3 class="error_text_segment">Error: Equation {{@key}}</h3>
+            <p>{{this.error}}<br /><br /><span style="font-size:17px"><b>{{this.emphasis}}</b></span></p>
+        {{/each}}
         <form action="/" method="get">
             <input type="submit" class="btn primary_btn" value="Back" />
         </form>

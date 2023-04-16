@@ -6,8 +6,15 @@ use std::collections::HashMap;
 use rocket::form::Form;
 use rocket::fs::NamedFile;
 use rocket_dyn_templates::{context, Template};
+use serde::Serialize;
 
 use percentages::run;
+
+#[derive(Serialize)]
+struct TemplateErrorContext {
+    error: String,
+    emphasis: Option<&'static str>,
+}
 
 #[derive(FromForm)]
 struct Equation {
@@ -41,26 +48,37 @@ async fn results(equations: Form<Equation>) -> Template {
 
     // Impromptu solution to HBS issues by using @key & not @index.
     // Might find another solution later.
+    // Also, `index` must be a String to serialize.
     let mut percentages_map: HashMap<String, f64> = HashMap::new();
-    let mut percentages_index: u8 = 0;
+    let mut error_map: HashMap<String, TemplateErrorContext> = HashMap::new();
+    let mut index: u8 = 1;
 
     for equation in equations {
         match run(equation) {
             Ok(result) => {
-                percentages_index += 1;
-                // percentages_index must be a String to serialize.
-                percentages_map.insert(percentages_index.to_string(), result.percentage);
+                percentages_map.insert(index.to_string(), result.percentage);
+                index += 1;
             }
             Err(error) => {
-                return Template::render(
-                    "error",
-                    context! {
+                error_map.insert(
+                    index.to_string(),
+                    TemplateErrorContext {
                         error: error.error,
                         emphasis: error.emphasis,
                     },
-                )
+                );
+                index += 1;
             }
         }
+    }
+
+    if !error_map.is_empty() {
+        return Template::render(
+            "error",
+            context! {
+                error: error_map,
+            },
+        );
     }
 
     Template::render(
