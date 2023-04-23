@@ -48,7 +48,6 @@ async fn results(equations: Form<Equation>) -> Template {
 
     // Impromptu solution to HBS issues by using @key & not @index.
     // Might find another solution later.
-    // Also, `index` must be a String to serialize.
     let mut percentages_map: HashMap<String, f64> = HashMap::new();
     let mut error_map: HashMap<String, TemplateErrorContext> = HashMap::new();
     let mut index: u8 = 1;
