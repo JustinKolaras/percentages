@@ -6,7 +6,7 @@
     <body>
         <h1>Success</h1>
         {{#each percentage}}
-            <h3 class="primary_text_segment">Equation {{plus @key}}</h3>
+            <h3 class="primary_text_segment">Equation {{@key}}</h3>
             <p>Percentage: <b>{{this}}</b>%</p>
         {{/each}}
         <form action="/" method="get">
