@@ -70,7 +70,7 @@ async fn results(equations: Form<Equation>) -> Template {
                 } else {
                     for value in error_map.values() {
                         if !seen_errors.insert(value.error.clone()) {
-                            // Get the index of an error instance and remove it.
+                            // Remove the previous error from the map.
                             let position = error_map
                                 .iter()
                                 .position(|v| v.1.error == value.error.clone());
