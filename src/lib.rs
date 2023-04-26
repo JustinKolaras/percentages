@@ -1,7 +1,9 @@
 use eval::eval;
 use regex::Captures;
 use regex::Regex;
+use serde::Serialize;
 use std::str::FromStr;
+use uuid::Uuid;
 
 const VERIFY_REGEX: &str = r"\(((\d+\.?\d*|\+|\-)+)\)/(\-?\d+)$";
 const WHITESPACE_ONLY_REGEX: &str = r"\A\s*\z";
@@ -25,9 +27,13 @@ pub struct SuccessData {
     pub percentage: f64,
 }
 
+#[derive(Serialize)]
 pub struct ErrorData<'a> {
     pub error: String,
     pub emphasis: Option<&'a str>,
+    // Specific error ID to ensure errors aren't batched
+    // incorrectly due to multiple field differentiations.
+    pub id: String,
 }
 
 impl FromStr for CalculationData {
@@ -94,6 +100,7 @@ pub fn run(input: String) -> Result<SuccessData, ErrorData<'static>> {
                         Some("must be in the form of (...)/x")
                     }
                 },
+                id: Uuid::new_v4().to_string(),
             })
         }
     };
@@ -105,6 +112,7 @@ pub fn run(input: String) -> Result<SuccessData, ErrorData<'static>> {
                 parsed.elements, parsed.divider
             ),
             emphasis: None,
+            id: Uuid::new_v4().to_string(),
         });
     }
 

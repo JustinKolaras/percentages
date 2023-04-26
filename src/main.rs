@@ -7,15 +7,9 @@ use itertools::Itertools;
 use rocket::form::Form;
 use rocket::fs::NamedFile;
 use rocket_dyn_templates::{context, Template};
-use serde::Serialize;
 
 use percentages::run;
-
-#[derive(Serialize, Debug)]
-struct TemplateErrorContext {
-    error: String,
-    emphasis: Option<&'static str>,
-}
+use percentages::ErrorData;
 
 #[derive(FromForm)]
 struct Equation {
@@ -49,8 +43,9 @@ async fn results(equations: Form<Equation>) -> Template {
 
     // Impromptu solution to HBS issues by using @key & not @index.
     let mut percentages_map: HashMap<String, f64> = HashMap::new();
-    let mut error_map: HashMap<String, TemplateErrorContext> = HashMap::new();
-    let mut seen_errors: HashSet<String> = HashSet::new();
+    let mut error_map: HashMap<String, ErrorData> = HashMap::new();
+    let mut seen_errors: HashSet<&String> = HashSet::new();
+    let mut error_remove_pile: Vec<String> = Vec::new();
     let mut index: u8 = 1;
     let mut indexes: Vec<u8> = Vec::from([index]);
 
@@ -63,29 +58,37 @@ async fn results(equations: Form<Equation>) -> Template {
             Err(error_data) => {
                 let error: String = error_data.error;
                 let emphasis: Option<&str> = error_data.emphasis;
+                let error_id: String = error_data.id;
 
                 // See if error has been seen before. If so, push to indexes.
                 if error_map.is_empty() {
-                    seen_errors.insert(error.clone());
+                    seen_errors.insert(&error_id);
                 } else {
-                    for value in error_map.values() {
-                        if !seen_errors.insert(value.error.clone()) {
-                            // Remove the previous error from the map.
-                            let position = error_map
-                                .iter()
-                                .position(|v| v.1.error == value.error.clone());
-                            error_map.remove(&position.unwrap());
+                    for (key, value) in error_map.iter_mut() {
+                        let error: &String = &value.id;
+                        if !seen_errors.insert(error) {
+                            // Push the index. Removing the previous error is done later (see comment).
                             indexes.push(index);
+
+                            // This is horribly sloppy, but due to constrictions with Rust's
+                            // borrow checker, I can't figure out a better way to do this.
+                            // Will probably refactor later.
+                            //
+                            // All errors will be pushed to error_remove_pile, then, outside the loop,
+                            // I'll loop through this vector and remove the corresponding keys.
+                            error_remove_pile.push(key.clone());
                         }
                     }
                 }
 
-                //println!("{:?}", seen_errors);
+                for key in error_remove_pile.iter() {
+                    error_map.remove(key);
+                }
 
                 // Using itertools as Rust won't stringify a Vec<u8> concatenation.
                 let split: String = indexes.iter().join(", ");
 
-                error_map.insert(split, TemplateErrorContext { error, emphasis });
+                error_map.insert(split, ErrorData { error, emphasis, id: error_id });
                 index += 1;
             }
         }
