@@ -41,11 +41,12 @@ async fn results(equations: Form<Equation>) -> Template {
     let equations: Equation = equations.into_inner();
     let equations: Vec<String> = equations.equations;
 
-    // Impromptu solution to HBS issues by using @key & not @index.
+    // Most of these data sets use the equation number as their key
+    // to circumvent HBS issues (@key as replacement for unprogrammable @index).
     let mut percentages_map: HashMap<String, f64> = HashMap::new();
     let mut error_map: HashMap<String, ErrorData> = HashMap::new();
     let mut seen_errors: HashSet<&String> = HashSet::new();
-    let mut error_remove_pile: Vec<String> = Vec::new();
+    let mut error_remove_pile: Vec<&String> = Vec::new();
     let mut index: u8 = 1;
     let mut indexes: Vec<u8> = Vec::from([index]);
 
@@ -64,7 +65,7 @@ async fn results(equations: Form<Equation>) -> Template {
                 if error_map.is_empty() {
                     seen_errors.insert(&error_id);
                 } else {
-                    for (key, value) in error_map.iter_mut() {
+                    for (key, value) in error_map.iter() {
                         let error: &String = &value.id;
                         if !seen_errors.insert(error) {
                             // Push the index. Removing the previous error is done later (see comment).
@@ -76,13 +77,13 @@ async fn results(equations: Form<Equation>) -> Template {
                             //
                             // All errors will be pushed to error_remove_pile, then, outside the loop,
                             // I'll loop through this vector and remove the corresponding keys.
-                            error_remove_pile.push(key.clone());
+                            error_remove_pile.push(key);
                         }
                     }
                 }
 
                 for key in error_remove_pile.iter() {
-                    error_map.remove(key);
+                    error_map.remove(*key);
                 }
 
                 // Using itertools as Rust won't stringify a Vec<u8> concatenation.
