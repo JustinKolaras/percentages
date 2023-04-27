@@ -45,8 +45,10 @@ async fn results(equations: Form<Equation>) -> Template {
     // to circumvent HBS issues (@key as replacement for unprogrammable @index).
     let mut percentages_map: HashMap<String, f64> = HashMap::new();
     let mut error_map: HashMap<String, ErrorData> = HashMap::new();
-    let mut seen_errors: HashSet<&String> = HashSet::new();
-    let mut error_remove_pile: Vec<&String> = Vec::new();
+    // Need a new HashMap to deal with mutability issues. Again, will probably refactor later.
+    let mut parsed_error_map: HashMap<String, ErrorData> = HashMap::new();
+    let mut seen_errors: HashSet<String> = HashSet::new();
+    //let mut error_remove_pile: Vec<&String> = Vec::new();
     let mut index: u8 = 1;
     let mut indexes: Vec<u8> = Vec::from([index]);
 
@@ -63,10 +65,11 @@ async fn results(equations: Form<Equation>) -> Template {
 
                 // See if error has been seen before. If so, push to indexes.
                 if error_map.is_empty() {
-                    seen_errors.insert(&error_id);
+                    seen_errors.insert(error_id);
                 } else {
                     for (key, value) in error_map.iter() {
-                        let error: &String = &value.id;
+                        let error: String = value.id.clone();
+                        /*
                         if !seen_errors.insert(error) {
                             // Push the index. Removing the previous error is done later (see comment).
                             indexes.push(index);
@@ -79,12 +82,28 @@ async fn results(equations: Form<Equation>) -> Template {
                             // I'll loop through this vector and remove the corresponding keys.
                             error_remove_pile.push(key);
                         }
+                        */
+                        
+                        // Try another approach in which the successors are pushed to a 
+                        // new vector.
+
+                        let error_clone: String = error.clone();
+                        let id_clone: String = error_id.clone();
+
+                        if !seen_errors.insert(error) {
+                            indexes.push(index);
+                            continue;
+                        }
+
+                        parsed_error_map.insert(index.to_string(), ErrorData { error: error_clone, emphasis, id: id_clone });
                     }
                 }
 
+                /*
                 for key in error_remove_pile.iter() {
                     error_map.remove(*key);
                 }
+                */
 
                 // Using itertools as Rust won't stringify a Vec<u8> concatenation.
                 let split: String = indexes.iter().join(", ");
